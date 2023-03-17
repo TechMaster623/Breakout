@@ -183,20 +183,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     
                 }
             }
-                if contact.bodyA.node?.name == "loseZone" ||
-                    contact.bodyB.node?.name == "loseZone" {
-                    lives -= 1
-                    if lives > 0 {
-                        score = 0
-                        resetGame()
-                        kickBall()
-                        
-                    }
-                    else {
-                        gameOver(winner: false)
-                    }
+            if contact.bodyA.node?.name == "loseZone" ||
+                contact.bodyB.node?.name == "loseZone" {
+                lives -= 1
+                if lives > 0 {
+                    score = 0
+                    resetGame()
+                    kickBall()
+                    
+                }
+                else {
+                    gameOver(winner: false)
                 }
             }
+        }
         
         func gameOver(winner: Bool) {
             playingGame = false
@@ -233,11 +233,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
     }
-    
-    
-    
-    
-    
-    
-    
+    override func update(_ currentTime: TimeInterval) {
+        if abs(ball.physicsBody!.velocity.dx) < 100 {
+            ball.physicsBody?.applyImpulse(CGVector(dx: Int.random(in: -3...3), dy: 0))
+        }
+        if abs(ball.physicsBody!.velocity.dy) < 100 {
+            ball.physicsBody?.applyImpulse(CGVector(dx: 0, dy: Int.random(in: -3...3)))
+        }
+    }
 }
