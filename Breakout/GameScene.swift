@@ -26,9 +26,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
         //this stuff happens once (when the app opens)
         createBackground()
-        resetGame()
         makeloseZone()
         makeLabels()
+        resetGame()
     }
     
     func resetGame() {
@@ -41,18 +41,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func kickBall() {
         ball.physicsBody?.isDynamic = true
-        ball.physicsBody?.applyImpulse(CGVector(dx: 3, dy: 5))
+        ball.physicsBody?.applyImpulse(CGVector(dx: Int.random(in: -5...5) , dy: 5))
     }
+    
     func updateLabels() {
         scoreLabel.text = "Score: \(score)"
         livesLabel.text = "Lives: \(lives)"
     }
+    
     func createBackground() {
         let stars = SKTexture(imageNamed: "Stars")
         for i in 0...1 {
             let starsBackground = SKSpriteNode(texture: stars)
             starsBackground.zPosition = -1
-            starsBackground.position = CGPoint(x: 0, y: starsBackground.size.height * CGFloat(i))
+            starsBackground.position = CGPoint(x: 0, y:
+             starsBackground.size.height * CGFloat(i))
             addChild(starsBackground)
             let moveDown = SKAction.moveBy(x: 0, y: -starsBackground.size.height, duration: 20)
             let moveReset = SKAction.moveBy(x: 0, y: starsBackground.size.height, duration: 0)
@@ -101,6 +104,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         bricks.append(brick)
     }
     
+    func makeBricks() {
+        for brick in bricks {
+            if brick.parent != nil {
+                brick.removeFromParent()
+            }
+        }
+        bricks.removeAll()
+        removedBricks = 0
+        
+        let count = Int(frame.width) / 55
+        let xOffset = (Int(frame.width) - (count * 55)) / 2 + Int(frame.minX)  + 25
+        let colors:  [UIColor] = [.blue, .orange, .green]
+        for r in 0..<3 {
+            let y = Int(frame.maxY) - 65 - (r * 25)
+            for i in 0..<count {
+                let x = i * 55 + xOffset
+                makeBrick(x: x, y: y, color: colors[r])
+            }
+        }
+    }
+    
     func makeloseZone() {
         loseZone = SKSpriteNode(color: .red, size: CGSize(width: frame.width, height: 50))
         loseZone.position = CGPoint(x: frame.midX, y: frame.minY + 25)
@@ -109,6 +133,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         loseZone.physicsBody?.isDynamic = false
         addChild(loseZone)
     }
+    
     func makeLabels() {
         playLabel.fontSize = 24
         playLabel.text = "Tap to start"
@@ -125,7 +150,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         scoreLabel.fontSize = 18
         scoreLabel.fontColor = .black
         scoreLabel.fontName = "Arial"
-        scoreLabel.position = CGPoint(x: frame.maxX - 50, y: frame.minY + 18)
+        scoreLabel.position = CGPoint(x: frame.minX - 50, y: frame.minY + 18)
         addChild(scoreLabel)
     }
     
@@ -150,6 +175,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
     }
+    
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             let location = touch.location(in: self)
@@ -158,13 +184,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
     }
+    
     func didBegin(_ contact: SKPhysicsContact) {
         for brick in bricks {
-            
-            
             if contact.bodyA.node == brick ||
                 contact.bodyB.node == brick {
                 score += 1
+                ball.physicsBody!.velocity.dx *= CGFloat(1.02)
+                ball.physicsBody!.velocity.dy *= CGFloat(1.02)
                 updateLabels()
                 if brick.color == .blue {
                     brick.color = .orange
@@ -173,66 +200,40 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     brick.color = .green
                 }
                 else {
-                    
-                    
                     brick.removeFromParent()
                     removedBricks += 1
                     if removedBricks == bricks.count {
                         gameOver(winner: true)
                     }
-                    
-                }
-            }
-            if contact.bodyA.node?.name == "loseZone" ||
-                contact.bodyB.node?.name == "loseZone" {
-                lives -= 1
-                if lives > 0 {
-                    score = 0
-                    resetGame()
-                    kickBall()
-                    
-                }
-                else {
-                    gameOver(winner: false)
                 }
             }
         }
-        
-        func gameOver(winner: Bool) {
-            playingGame = false
-            playLabel.alpha = 1
-            resetGame()
-            if winner {
-                playLabel.text = "You win! Tap to Play again"
+        if contact.bodyA.node?.name == "loseZone" ||
+            contact.bodyB.node?.name == "loseZone" {
+            lives -= 1
+            if lives > 0 {
+                score = 0
+                resetGame()
+                kickBall()
             }
             else {
-                playLabel.text = "You lose! Tap to Play Again"
+                gameOver(winner: false)
             }
-            
-            
         }
     }
-    func makeBricks() {
-        for brick in bricks {
-            if brick.parent != nil {
-                brick.removeFromParent()
-            }
-        }
-        bricks.removeAll()
-        removedBricks = 0
         
-        let count = Int(frame.width) / 55
-        let xOffset = (Int(frame.width) - (count * 55)) / 2 + Int(frame.minX)  + 25
-        let colors:  [UIColor] = [.blue, .orange, .green]
-        for r in 0..<3 {
-            let y = Int(frame.maxY) - 65 - (r * 25)
-            for i in 0..<count {
-                let x = i * 55 + xOffset
-                makeBrick(x: x, y: y, color: colors[r])
-            }
+    func gameOver(winner: Bool) {
+        playingGame = false
+        playLabel.alpha = 1
+        resetGame()
+        if winner {
+            playLabel.text = "You win! Tap to Play again"
         }
-        
+        else {
+            playLabel.text = "You lose! Tap to Play Again"
+        }
     }
+    
     override func update(_ currentTime: TimeInterval) {
         if abs(ball.physicsBody!.velocity.dx) < 100 {
             ball.physicsBody?.applyImpulse(CGVector(dx: Int.random(in: -3...3), dy: 0))
